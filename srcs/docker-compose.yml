@@ -1,0 +1,155 @@
+version: "3.7"
+  
+services:
+  nginx:
+    image: nginx
+    container_name: nginx
+    build:
+      context: ./requirements/nginx
+      dockerfile: ./Dockerfile 
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    depends_on:
+      - wordpress
+    volumes:
+      - wordpress:/var/www/html
+    restart: always
+    env_file:
+      - .env
+
+  wordpress:
+    image: wordpress
+    container_name: wordpress
+    build:
+      context: ./requirements/wordpress
+      dockerfile: ./Dockerfile
+    networks:
+      - inception
+    depends_on:
+      - mariadb
+    volumes:
+      - wordpress:/var/www/html
+    restart: always
+    env_file:
+      - .env
+  
+  mariadb:
+    image: mariadb
+    container_name: mariadb 
+    build:
+      context: ./requirements/mariadb
+      dockerfile: ./Dockerfile
+    networks:
+      - inception
+    volumes:
+      - mariadb:/var/lib/mysql
+    restart: always
+    env_file:
+      - .env
+
+  redis:
+    image: redis
+    container_name: redis 
+    build:
+      context: ./requirements/redis
+      dockerfile: ./Dockerfile
+    networks:
+      - inception
+    restart: always
+    volumes:
+      - redis:/var/www/html
+
+  ftp:
+    image: ftp
+    container_name: ftp 
+    build:
+      context: ./requirements/ftp
+      dockerfile: ./Dockerfile
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "20:20"
+      - "21:21"
+    volumes:
+      - wordpress:/var/www/html
+    env_file:
+      - .env
+
+  adminer:
+    image: adminer
+    container_name: adminer 
+    build:
+      context: ./requirements/adminer
+      dockerfile: ./Dockerfile
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - mariadb:/var/lib/mysql
+    depends_on:
+      - mariadb
+  
+  static_website:
+    image: static_website
+    container_name: static_website 
+    build:
+      context: ./requirements/static_website
+      dockerfile: ./Dockerfile
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "5000:5000"
+  
+  minecraft_server:
+    image: minecraft_server
+    container_name: minecraft_server 
+    build:
+      context: ./requirements/minecraft_server
+      dockerfile: ./Dockerfile
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "25565:25565"
+    volumes:
+      - minecraft_server:/minecraft/
+
+
+volumes:
+  mariadb:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/averdon/data/mariadb
+
+  wordpress:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/averdon/data/wordpress
+
+  redis:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/averdon/data/redis
+
+  minecraft_server:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/averdon/data/minecraft_server
+
+
+networks:
+  inception:
